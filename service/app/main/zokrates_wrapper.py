@@ -8,7 +8,7 @@ import hashlib
 import json
 import subprocess
 
-zokrates_bin = './target/release/zokrates'
+zokrates_bin = 'zokrates'
 
 def IntToBitsArray(x, length):
   bits_array = []
@@ -46,12 +46,12 @@ def StrToBitsArray(s):
 def CharToBitsArray(c):
   return IntToBitsArray(ord(c), 8)
 
-def PrepareInput():
-  input_array = [sys.argv[1], sys.argv[3]]
-  amount1 = int(sys.argv[1])
-  amount2 = int(sys.argv[3])
-  str1 = sys.argv[2][0]
-  str2 = sys.argv[4][0]
+def PrepareInput(amount1_str, salt1, amount2_str, salt2):
+  input_array = [amount1_str, amount2_str]
+  amount1 = int(amount1_str)
+  amount2 = int(amount2_str)
+  str1 = salt1[0]
+  str2 = salt2[0]
   commit1 = hashlib.sha256(IntToStr(amount1) + str1).hexdigest()
   commit2 = hashlib.sha256(IntToStr(amount2) + str2).hexdigest()
   print commit1, commit2
@@ -131,15 +131,12 @@ def GenerateProof():
       K = ParseG1Point(line)
   return A, A_P, B, B_P, C, C_P, H, K
  
-def ComputeWitnessAndGetProof():
-  input_array = PrepareInput()
+def ComputeWitnessAndGetProof(amount1, salt1, amount2, salt2):
+  input_array = PrepareInput(amount1, salt1, amount2, salt2)
   os.system(zokrates_bin + ' compute-witness -a ' + ' '.join(input_array))
   result, win_bid,s = ParseOutput('witness')
   A, A_P, B, B_P, C, C_P, H, K = GenerateProof()
   data = {'a' : A, 'a_p' : A_P, 'b' : B, 'b_p' : B_P, 'c' :C, 'c_p' : C_P,
           'h' : H, 'k' : K, 'input' : [result, win_bid]}
   json_data = json.dumps(data)
-  print json_data
-  
-
-ComputeWitnessAndGetProof()
+  return json_data
