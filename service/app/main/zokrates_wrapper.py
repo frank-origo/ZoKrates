@@ -7,8 +7,10 @@ import sys
 import hashlib
 import json
 import subprocess
+import tempfile
 
 zokrates_bin = 'zokrates'
+trusted_setup_dir = '/home/origo/origo-executor/trusted_setup'
 
 def IntToBitsArray(x, length):
   bits_array = []
@@ -133,8 +135,11 @@ def GenerateProof():
  
 def ComputeWitnessAndGetProof(amount1, salt1, amount2, salt2):
   input_array = PrepareInput(amount1, salt1, amount2, salt2)
-  os.system(zokrates_bin + ' compute-witness -a ' + ' '.join(input_array))
-  result, win_bid,s = ParseOutput('witness')
+  witness_file = tempfile.NamedTemporaryFile()
+  command = ('%s compute-witness --input %s/out --output %s -a %s > /dev/null' % 
+             (zokrates_bin, trusted_setup_dir, witness_file.name, ' '.join(input_array)))
+  os.system(command)
+  result, win_bid,s = ParseOutput(witness_file.name)
   A, A_P, B, B_P, C, C_P, H, K = GenerateProof()
   data = {'a' : A, 'a_p' : A_P, 'b' : B, 'b_p' : B_P, 'c' :C, 'c_p' : C_P,
           'h' : H, 'k' : K, 'input' : [result, win_bid]}
