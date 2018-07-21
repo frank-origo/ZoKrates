@@ -103,9 +103,14 @@ def ParseG2Point(s):
 
   
 
-def GenerateProof():
+def GenerateProof(witness_file):
+  meta_file = '%s/variables.inf' % trusted_setup_dir
+  proving_key = '%s/proving.key' % trusted_setup_dir
   output = subprocess.check_output(
-      [zokrates_bin, 'generate-proof'])
+      [zokrates_bin, 'generate-proof', 
+       '-i', meta_file, 
+       '-p', proving_key, 
+       '-w', witness_file])
   A = []
   A_P = []
   B = []
@@ -140,7 +145,7 @@ def ComputeWitnessAndGetProof(amount1, salt1, amount2, salt2):
              (zokrates_bin, trusted_setup_dir, witness_file.name, ' '.join(input_array)))
   os.system(command)
   result, win_bid,s = ParseOutput(witness_file.name)
-  A, A_P, B, B_P, C, C_P, H, K = GenerateProof()
+  A, A_P, B, B_P, C, C_P, H, K = GenerateProof(witness_file.name)
   data = {'a' : A, 'a_p' : A_P, 'b' : B, 'b_p' : B_P, 'c' :C, 'c_p' : C_P,
           'h' : H, 'k' : K, 'input' : [result, win_bid]}
   json_data = json.dumps(data)
